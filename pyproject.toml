@@ -1,0 +1,105 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gr-rebuild"
+version = "0.1.0"
+description = "A project for fine-tuning models with LoRAs using transformers and Dstack"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.8.1"
+dependencies = [
+    "torch>=2.0.0",
+    "transformers>=4.35.0",
+    "peft>=0.7.0",
+    "datasets>=2.14.0",
+    "accelerate>=0.24.0",
+    "dstack>=0.12.0",
+    "huggingface-hub>=0.19.0",
+    "tokenizers>=0.15.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "tqdm>=4.65.0",
+    "wandb>=0.15.0",
+    "tensorboard>=2.13.0",
+    "pyyaml>=6.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "hatch>=1.8.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.3.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.3.0",
+]
+
+[project.scripts]
+gr-rebuild = "gr_rebuild.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gr_rebuild"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = "gr_rebuild"
+
+[tool.hatch.version]
+path = "src/gr_rebuild/__init__.py"
+
+[tool.hatch.envs.default]
+dependencies = [
+    "hatch>=1.8.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.3.0",
+    "mypy>=1.5.0",
+]
+
+[tool.hatch.scripts]
+test = "pytest"
+format = "ruff format ."
+lint = "ruff check ."
+check = "ruff check . --fix"
+build = "hatch build"
+
+[tool.ruff]
+target-version = "py38"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by formatter
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto" 
+
+[dependency-groups]
+dev = [
+    "hatch>=1.14.1",
+    "pytest>=8.3.5",
+    "ruff>=0.12.7",
+]
