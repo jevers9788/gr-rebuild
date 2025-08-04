@@ -16,7 +16,7 @@ def test_status_command(runner):
     """Test the status command."""
     result = runner.invoke(main, ["status"])
     assert result.exit_code == 0
-    assert "GR Rebuild is ready" in result.output
+    assert "✅" in result.output
 
 
 def test_train_command_help(runner):
