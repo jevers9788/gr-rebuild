@@ -41,7 +41,7 @@ def generate_sample_slack():
 def build_conversation_dataset(dir: str, user_id: str, filename: str):
     """Build a conversation dataset from Slack conversation data."""
     console.print(Panel("Building conversation dataset", title="🚀 Building"))
-    from gr_rebuild.datasets import (
+    from grr.datasets import (
         load_slack_messages,
         preprocess_slack_messages,
         tokenize_dataset,
