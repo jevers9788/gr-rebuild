@@ -1,7 +1,7 @@
 """GR Rebuild - A project for fine-tuning models with LoRAs using transformers and Dstack."""
 
 __version__ = "0.1.0"
-__author__ = "Gustavo Rezende"
+__author__ = "Gustavo Rezende" # noice, keeping this
 __email__ = "gustavo.rezende@gmail.com"
 
 # Import fine-tuning components if unsloth is there
