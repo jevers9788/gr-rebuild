@@ -184,3 +184,6 @@ logs/
 # Checkpoints
 checkpoints/
 runs/ 
+
+# Dstack token
+dstack_token
