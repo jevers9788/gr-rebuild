@@ -17,6 +17,44 @@ def main():
 
 
 @main.command()
+def generate_sample_slack():
+    """Generate a sample Slack conversation dataset."""
+    console.print(
+        Panel("Generating sample Slack conversation dataset", title="🚀 Generating")
+    )
+    from scripts.generate_sample_slack import generate_sample_slack
+
+    generate_sample_slack()
+    console.print("Sample Slack conversation dataset generated successfully!")
+
+
+@main.command()
+@click.option(
+    "--dir", default="data", help="Directory containing Slack conversation data"
+)
+@click.option("--user-id", default="U06BOT", help="User ID to filter by")
+@click.option(
+    "--filename",
+    default="slack_messages_sample.jsonl",
+    help="Filename to save the dataset",
+)
+def build_conversation_dataset(dir: str, user_id: str, filename: str):
+    """Build a conversation dataset from Slack conversation data."""
+    console.print(Panel("Building conversation dataset", title="🚀 Building"))
+    from gr_rebuild.datasets import (
+        load_slack_messages,
+        preprocess_slack_messages,
+        tokenize_dataset,
+    )
+
+    ds = load_slack_messages(dir, user_id, filename)
+    ds = preprocess_slack_messages(ds, user_id)
+    ds = tokenize_dataset(ds)
+
+    console.print("Sample Slack conversation dataset generated successfully!")
+
+
+@main.command()
 @click.option(
     "--model", default="unsloth/llama-3.2-1b-bnb-4bit", help="Model to fine-tune"
 )
