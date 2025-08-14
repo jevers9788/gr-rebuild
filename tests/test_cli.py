@@ -3,7 +3,7 @@
 import pytest
 from click.testing import CliRunner
 
-from gr_rebuild.cli import main
+from grr.cli import main
 
 
 @pytest.fixture

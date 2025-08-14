@@ -1,13 +1,10 @@
 # GR Rebuild
 
-A project for fine-tuning models with LoRAs using transformers and Dstack.
+TODO 
 
 ## Features
 
-- 🤖 LoRA fine-tuning with Transformers
-- ☁️ Dstack compute integration
-- 🚀 Modern Python packaging with Hatch
-- 📦 Fast dependency management with uv
+TODO
 
 ## Installation
 
@@ -56,7 +53,7 @@ uv run hatch build
 ```
 gr-rebuild/
 ├── src/
-│   └── gr_rebuild/
+│   └── grr/
 │       ├── __init__.py
 │       └── cli.py
 ├── tests/

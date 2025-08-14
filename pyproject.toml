@@ -44,16 +44,16 @@ dev = [
 ]
 
 [project.scripts]
-gr-rebuild = "gr_rebuild.cli:main"
+grr = "grr.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/gr_rebuild"]
+packages = ["src/grr"]
 
 [tool.hatch.build.targets.wheel.sources]
-"src" = "gr_rebuild"
+"src" = "grr"
 
 [tool.hatch.version]
-path = "src/gr_rebuild/__init__.py"
+path = "src/grr/__init__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
