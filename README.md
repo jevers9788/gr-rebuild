@@ -159,6 +159,26 @@ To use with Dstack cloud compute:
    grr train --dataset sample
    ```
 
+## Build Datasets
+
+```bash
+# Build dataset from Discord export (chat format)
+uv run grr build-dataset \
+  --source discord \
+  --input data.json \
+  --target-user duffdogg \
+  --format chat \
+  --output discord_chat.json
+
+# Build dataset from Slack export (alpaca format)
+uv run grr build-dataset \
+  --source slack \
+  --input slack_messages.jsonl \
+  --target-user U06BOT \
+  --format alpaca \
+  --output slack_alpaca.json
+```
+
 ## Training Configuration
 
 The `TrainingConfig` class supports various parameters:
