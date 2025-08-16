@@ -136,20 +136,25 @@ gr-rebuild/
 To use with Dstack cloud compute:
 
 1. **Configure RunPod backend** in `~/.dstack/server/config.yml`
-2. **Start development environment**:
+2. **Start Dstack server**
+ ```bash
+ uv run dstack server
+ ```
+3. **Start development environment in a new terminal**:
    ```bash
+
    uv run dstack apply -f dev.dstack.yml
    ```
-3. **Connect via SSH or Cursor**:
+4. **Connect via SSH or Cursor**:
    ```bash
    ssh fudgin
    # or use the Cursor link
    ```
-4. **Install dependencies in the cloud environment**:
+5. **Install dependencies in the cloud environment**:
    ```bash
    uv sync
    ```
-5. **Run training**:
+6. **Run training**:
    ```bash
    grr train --dataset sample
    ```
