@@ -1,15 +1,5 @@
 """Fine-tuning module using Unsloth for LoRA training."""
 
-import json
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, List, Optional
-
-from datasets import Dataset
-from peft import LoraConfig, TaskType, get_peft_model
-from transformers import Trainer, TrainingArguments
-
-# Try to import Unsloth (optional)
 try:
     from unsloth import FastLanguageModel
 
@@ -17,6 +7,16 @@ try:
 except ImportError:
     UNSLOTH_AVAILABLE = False
     FastLanguageModel = None
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional
+
+from datasets import Dataset
+from peft import LoraConfig, TaskType, get_peft_model
+from transformers import Trainer, TrainingArguments, DataCollatorWithPadding
+from transformers.training_args import IntervalStrategy, SaveStrategy
+
 
 
 @dataclass
@@ -61,7 +61,7 @@ class TrainingConfig:
 class UnslothFineTuner:
     """Fine-tuner using Unsloth for efficient LoRA training."""
 
-    def __init__(self, config: TrainingConfig):
+    def __init__(self, config: TrainingConfig, data_format: str = "chat"):
         if not UNSLOTH_AVAILABLE:
             raise ImportError(
                 "Unsloth is not available. Install with 'uv sync --extra gpu' "
@@ -69,6 +69,7 @@ class UnslothFineTuner:
             )
 
         self.config = config
+        self.data_format = data_format
         self.model = None
         self.tokenizer = None
         self.trainer = None
@@ -104,23 +105,28 @@ class UnslothFineTuner:
         self.model.print_trainable_parameters()
 
     def prepare_dataset(self, data: List[Dict[str, str]]) -> Dataset:
-        """Prepare dataset for training.
-        Args:
-            data: List of dictionaries with 'instruction', 'input', and 'output' keys
-        Returns:
-            Tokenized dataset ready for training
-        """
+        """Prepare dataset for training using either 'chat' or 'alpaca' formatting."""
         print(f"Preparing dataset with {len(data)} examples...")
 
         def formatting_prompts_func(examples):
-            """Format prompts for conversational training."""
-            convos = examples["conversations"]
             texts = []
 
-            for convo in convos:
-                text = self.tokenizer.apply_chat_template(
-                    convo, tokenize=False, add_generation_prompt=False
-                )
+            for convo in examples["conversations"]:
+                if self.data_format == "chat":
+                    text = self.tokenizer.apply_chat_template(
+                        convo, tokenize=False, add_generation_prompt=False
+                    )
+                elif self.data_format == "alpaca":
+                    # Alpaca-style: just concatenate instruction/input → output
+                    text_parts = []
+                    for msg in convo:
+                        if msg["role"] == "user":
+                            text_parts.append(f"Instruction: {msg['content']}\n")
+                        elif msg["role"] == "assistant":
+                            text_parts.append(f"Response: {msg['content']}\n")
+                    text = "".join(text_parts).strip()
+                else:
+                    raise ValueError(f"Unknown data_format: {self.data_format}")
                 texts.append(text)
 
             return {"text": texts}
@@ -128,14 +134,24 @@ class UnslothFineTuner:
         # Convert to dataset format
         dataset_data = []
         for item in data:
-            # Convert to conversation format
             conversation = []
-            if "instruction" in item:
-                conversation.append({"role": "user", "content": item["instruction"]})
-            if "input" in item and item["input"]:
-                conversation.append({"role": "user", "content": item["input"]})
-            if "output" in item:
-                conversation.append({"role": "assistant", "content": item["output"]})
+
+            if self.data_format == "chat":
+                # Add system message if present
+                if "system" in item and item["system"]:
+                    conversation.append({"role": "system", "content": item["system"]})
+                if "messages" in item:
+                    conversation.extend(item["messages"])
+
+            elif self.data_format == "alpaca":
+                if "instruction" in item:
+                    conversation.append({"role": "user", "content": item["instruction"]})
+                if "input" in item and item["input"]:
+                    conversation.append({"role": "user", "content": item["input"]})
+                if "output" in item:
+                    conversation.append({"role": "assistant", "content": item["output"]})
+            else:
+                raise ValueError(f"Unknown data_format: {self.data_format}")
 
             dataset_data.append({"conversations": conversation})
 
@@ -148,7 +164,6 @@ class UnslothFineTuner:
                 truncation=True,
                 padding="max_length",
                 max_length=self.config.max_seq_length,
-                return_tensors="pt",
             )
 
         tokenized_dataset = dataset.map(
@@ -156,8 +171,10 @@ class UnslothFineTuner:
         ).map(
             tokenize_function,
             batched=True,
-            remove_columns=tokenized_dataset.column_names,  # noqa: F821
         )
+
+        tokenized_dataset = tokenized_dataset.with_format("torch")
+        tokenized_dataset = tokenized_dataset.remove_columns("text")
 
         return tokenized_dataset
 
@@ -177,13 +194,16 @@ class UnslothFineTuner:
             logging_steps=self.config.logging_steps,
             save_steps=self.config.save_steps,
             eval_steps=self.config.eval_steps,
-            evaluation_strategy="steps" if eval_dataset else "no",
-            save_strategy="steps",
+            eval_strategy=IntervalStrategy.STEPS if eval_dataset else IntervalStrategy.NO,
+            save_strategy=SaveStrategy.STEPS,
             load_best_model_at_end=True if eval_dataset else False,
             report_to=None,  # Disable wandb/tensorboard
             dataloader_pin_memory=False,
             remove_unused_columns=False,
         )
+
+        #data_collator = DataCollatorWithPadding(tokenizer=self.tokenizer)
+
 
         self.trainer = Trainer(
             model=self.model,
@@ -208,6 +228,12 @@ class UnslothFineTuner:
 
         # Prepare datasets
         train_dataset = self.prepare_dataset(train_data)
+        # print a sample of the train dataset
+        print(train_dataset[0])
+        print(type(train_dataset[0]["input_ids"]))
+        # print the datasetup of the sample 
+        print(train_dataset.features)
+        print(train_dataset[0].keys())
         eval_dataset = None
         if eval_data:
             eval_dataset = self.prepare_dataset(eval_data)
