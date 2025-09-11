@@ -12,7 +12,6 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.11.1"
 dependencies = [
-    "torch>=2.0.0",
     "transformers>=4.35.0",
     "peft>=0.7.0",
     "datasets>=2.14.0",
@@ -33,14 +32,24 @@ dependencies = [
     "rich>=13.0.0",
 ]
 
+
 [project.optional-dependencies]
-# GPU training dependencies (for RunPod/dstack environments)
-gpu = [
-    "unsloth>=2024.1",
-    "bitsandbytes>=0.41.0",
-    "flash-attn>=2.3.0",
+# Core GPU stack 
+gpu-core = [
+    "torch>=2.7.0",
 ]
 
+# GPU extensions that require torch at build time
+gpu-extensions = [
+    "unsloth>=2024.1",
+    "bitsandbytes>=0.41.0",
+    "flash-attn"
+]
+
+# Full GPU setup (installs both groups)
+gpu = [
+    "gr-rebuild[gpu-core,gpu-extensions]"
+]
 # Development dependencies
 dev = [
     "hatch>=1.8.0",
@@ -62,6 +71,10 @@ packages = ["src/grr"]
 
 [tool.hatch.version]
 path = "src/grr/__init__.py"
+
+[tool.uv]
+no-build-isolation-package = ["flash-attn"]
+
 
 [tool.hatch.envs.default]
 dependencies = [
