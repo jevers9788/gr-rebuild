@@ -14,9 +14,8 @@ from typing import Dict, List, Optional
 
 from datasets import Dataset
 from peft import LoraConfig, TaskType, get_peft_model
-from transformers import Trainer, TrainingArguments, DataCollatorWithPadding
+from transformers import Trainer, TrainingArguments
 from transformers.training_args import IntervalStrategy, SaveStrategy
-
 
 
 @dataclass
@@ -159,12 +158,14 @@ class UnslothFineTuner:
 
         # Tokenize the dataset
         def tokenize_function(examples):
-            return self.tokenizer(
+            tokenized_dataset = self.tokenizer(
                 examples["text"],
                 truncation=True,
                 padding="max_length",
                 max_length=self.config.max_seq_length,
             )
+            tokenized_dataset["labels"] = tokenized_dataset["input_ids"]
+            return tokenized_dataset
 
         tokenized_dataset = dataset.map(
             formatting_prompts_func, batched=True, remove_columns=dataset.column_names
@@ -228,12 +229,6 @@ class UnslothFineTuner:
 
         # Prepare datasets
         train_dataset = self.prepare_dataset(train_data)
-        # print a sample of the train dataset
-        print(train_dataset[0])
-        print(type(train_dataset[0]["input_ids"]))
-        # print the datasetup of the sample 
-        print(train_dataset.features)
-        print(train_dataset[0].keys())
         eval_dataset = None
         if eval_data:
             eval_dataset = self.prepare_dataset(eval_data)
